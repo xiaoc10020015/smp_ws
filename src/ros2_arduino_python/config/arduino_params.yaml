@@ -6,7 +6,7 @@ qianxun:
   arduino:
     ros__parameters:
       port: /dev/ttyACM0
-      baud: 57600
+      baud: 576000
       timeout: 0.1
 
       rate: 50
