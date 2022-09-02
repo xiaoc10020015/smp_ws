@@ -8,7 +8,7 @@ from rclpy.node import Node
 from rclpy.duration import Duration
 from geometry_msgs.msg import Twist
 from interface_arduino.srv import *
-#from sdk.base_controller import BaseController
+from sdk.base_controller import BaseController
 from sdk.arduino_sensors import *
 from sdk.arduino_driver import Arduino
 
@@ -76,9 +76,8 @@ class ArduinoNode(Node):
         self.timer = self.create_timer(0.5, self.timer_callback)  # 创建一个定时器（单位为秒的周期，定时执行的回调函数）
         # Initialize the controlller
         self.controller = Arduino(self.port, self.baud, self.timeout, self.motors_reversed)
-        #self.controller.connect()
+        self.controller.connect()
         self.get_logger().info("Connected to Arduino on port " + self.port + " at " + str(self.baud) + " baud")
-    
         # Reserve a thread lock
         mutex = _thread.allocate_lock()
 
@@ -104,7 +103,15 @@ class ArduinoNode(Node):
                 sensor = PhidgetsVoltage(self, self.controller, name, params['pin'], params['rate'], self.base_frame)
             elif params['type'] == 'PhidgetsCurrent':
                 sensor = PhidgetsCurrent(self, self.controller, name, params['pin'], params['rate'], self.base_frame)
-    
+            try:
+                self.mySensors.append(sensor)
+                self.get_logger().info(name + " " + str(params) + " published on topic " + self.name + "/sensor/" + name)
+            except:
+                self.get_logger().info("Sensor type " + str(params['type']) + " not recognized.")
+
+        # Initialize the base controller if used
+        if self.use_base_controller:
+            self.myBaseController = BaseController(self, self.controller, self.base_frame, self.name + "_base_controller")
     def sensor_by_dict(self, data):
         result = dict()
         for _str in str(data).split('|'):

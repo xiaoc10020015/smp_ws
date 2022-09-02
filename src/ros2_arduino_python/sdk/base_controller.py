@@ -20,37 +20,56 @@
     
     http://www.gnu.org/licenses
 """
-import roslib; roslib.load_manifest('ros_arduino_python')
-import rospy
+#import roslib; roslib.load_manifest('ros_arduino_python')
+#import rospy
 import os
 
 from math import sin, cos, pi
 from geometry_msgs.msg import Quaternion, Twist, Pose
 from nav_msgs.msg import Odometry
-from tf.broadcaster import TransformBroadcaster
+from tf2_ros import TransformBroadcaster 
+from rclpy.duration import Duration
+from rclpy.clock import Clock
  
 """ Class to receive Twist commands and publish Odometry data """
 class BaseController:
-    def __init__(self, arduino, base_frame, name="base_controllers"):
+    def __init__(self, node, arduino, base_frame, name="base_controllers"):
+        self.node = node
         self.arduino = arduino
         self.name = name
         self.base_frame = base_frame
-        self.rate = float(rospy.get_param("~base_controller_rate", 10))
-        self.timeout = rospy.get_param("~base_controller_timeout", 1.0)
-        self.stopped = False
-                 
-        pid_params = dict()
-        pid_params['wheel_diameter'] = rospy.get_param("~wheel_diameter", "") 
-        pid_params['wheel_track'] = rospy.get_param("~wheel_track", "")
-        pid_params['encoder_resolution'] = rospy.get_param("~encoder_resolution", "") 
-        pid_params['gear_reduction'] = rospy.get_param("~gear_reduction", 1.0)
-        pid_params['Kp'] = rospy.get_param("~Kp", 20)
-        pid_params['Kd'] = rospy.get_param("~Kd", 12)
-        pid_params['Ki'] = rospy.get_param("~Ki", 0)
-        pid_params['Ko'] = rospy.get_param("~Ko", 50)
+
+        self.node.declare_parameter('base_controller_rate', 10)
+        self.rate = self.node.get_parameter('base_controller_rate').get_parameter_value().double_value
         
-        self.accel_limit = rospy.get_param('~accel_limit', 0.1)
-        self.motors_reversed = rospy.get_param("~motors_reversed", False)
+        self.node.declare_parameter('base_controller_timeout', 1.0)
+        self.timeout = self.node.get_parameter('base_controller_timeout').get_parameter_value().double_value
+
+        self.stopped = False
+        self.node.declare_parameter('wheel_diameter', '')
+        self.node.declare_parameter('wheel_track', '')
+        self.node.declare_parameter('encoder_resolution', '')
+        self.node.declare_parameter('gear_reduction', 1.0)
+        self.node.declare_parameter('Kp', 20)
+        self.node.declare_parameter('Kd', 12)
+        self.node.declare_parameter('Ki', 0)
+        self.node.declare_parameter('Ko', 50)
+        pid_params = dict()
+        pid_params['wheel_diameter'] = self.node.get_parameter('wheel_diameter').get_parameter_value().string_value
+        pid_params['wheel_track'] = self.node.get_parameter('wheel_track').get_parameter_value().string_value
+        pid_params['encoder_resolution'] = self.node.get_parameter('encoder_resolution').get_parameter_value().string_value 
+        pid_params['gear_reduction'] = self.node.get_parameter('gear_reduction').get_parameter_value().double_value
+        pid_params['Kp'] = self.node.get_parameter('Kp').get_parameter_value().integer_value
+        pid_params['Kd'] = self.node.get_parameter('Kd').get_parameter_value().integer_value
+        pid_params['Ki'] = self.node.get_parameter('Ki').get_parameter_value().integer_value
+        pid_params['Ko'] = self.node.get_parameter('Ko').get_parameter_value().integer_value
+        
+        self.node.declare_parameter('accel_limit', 0.1)
+        self.accel_limit = self.node.get_parameter('accel_limit').get_parameter_value().double_value
+        
+        #-----fix-----rclpy.exceptions.ParameterAlreadyDeclaredException
+        #self.node.declare_parameter('motors_reversed', False)
+        self.motors_reversed = self.node.get_parameter('motors_reversed').get_parameter_value().bool_value
         
         # Set up PID parameters and check for missing values
         self.setup_pid(pid_params)
@@ -64,9 +83,9 @@ class BaseController:
         # Track how often we get a bad encoder count (if any)
         self.bad_encoder_count = 0
                         
-        now = rospy.Time.now()    
+        now = Clock().now()
         self.then = now # time for determining dx/dy
-        self.t_delta = rospy.Duration(1.0 / self.rate)
+        self.t_delta = Duration(seconds =1.0 / self.rate)
         self.t_next = now + self.t_delta
 
         # Internal data        
@@ -82,17 +101,16 @@ class BaseController:
         self.last_cmd_vel = now
 
         # Subscriptions
-        rospy.Subscriber("cmd_vel", Twist, self.cmdVelCallback)
-        
+        self.node.create_subscription(Twist, "/cmd_vel", self.cmdVelCallback)
         # Clear any old odometry info
         self.arduino.reset_encoders()
         
         # Set up the odometry broadcaster
-        self.odomPub = rospy.Publisher('odom', Odometry, queue_size=5)
+        self.odomPub = self.node.create_publisher(Odometry, "odom", 5)
         self.odomBroadcaster = TransformBroadcaster()
         
-        rospy.loginfo("Started base controller for a base of " + str(self.wheel_track) + "m wide with " + str(self.encoder_resolution) + " ticks per rev")
-        rospy.loginfo("Publishing odometry data at: " + str(self.rate) + " Hz using " + str(self.base_frame) + " as base frame")
+        self.node.get_logger().info("Started base controller for a base of " + str(self.wheel_track) + "m wide with " + str(self.encoder_resolution) + " ticks per rev")
+        self.node.get_logger().info("Publishing odometry data at: " + str(self.rate) + " Hz using " + str(self.base_frame) + " as base frame")
         
     def setup_pid(self, pid_params):
         # Check to see if any PID parameters are missing
@@ -118,14 +136,14 @@ class BaseController:
         self.arduino.update_pid(self.Kp, self.Kd, self.Ki, self.Ko)
 
     def poll(self):
-        now = rospy.Time.now()
+        now = Clock().now()
         if now > self.t_next:
             # Read the encoders
             try:
                 left_enc, right_enc = self.arduino.get_encoder_counts()
             except:
                 self.bad_encoder_count += 1
-                rospy.logerr("Encoder exception count: " + str(self.bad_encoder_count))
+                self.node.get_logger().error("Encoder exception count: " + str(self.bad_encoder_count))
                 return
                             
             dt = now - self.then
@@ -167,7 +185,7 @@ class BaseController:
             self.odomBroadcaster.sendTransform(
                 (self.x, self.y, 0), 
                 (quaternion.x, quaternion.y, quaternion.z, quaternion.w),
-                rospy.Time.now(),
+                Clock().now(),
                 self.base_frame,
                 "odom"
                 )
@@ -186,7 +204,7 @@ class BaseController:
 
             self.odomPub.publish(odom)
             
-            if now > (self.last_cmd_vel + rospy.Duration(self.timeout)):
+            if now > (self.last_cmd_vel + Duration(seconds =self.timeout)):
                 self.v_des_left = 0
                 self.v_des_right = 0
                 
@@ -220,7 +238,7 @@ class BaseController:
             
     def cmdVelCallback(self, req):
         # Handle velocity-based movement requests
-        self.last_cmd_vel = rospy.Time.now()
+        self.last_cmd_vel = Clock().now()
         
         x = req.linear.x         # m/s
         th = req.angular.z       # rad/s
