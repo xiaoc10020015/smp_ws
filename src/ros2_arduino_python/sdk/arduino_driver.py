@@ -37,11 +37,10 @@ class Arduino:
     N_ANALOG_PORTS = 6
     N_DIGITAL_PORTS = 12
 
-    def __init__(self, node, port="/dev/ttyUSB0", baudrate=57600, timeout=0.5, motors_reversed=False):
+    def __init__(self, port="/dev/ttyUSB0", baudrate=57600, timeout=0.5, motors_reversed=False):
 
         self.PID_RATE = 30 # Do not change this!  It is a fixed property of the Arduino PID controller.
         self.PID_INTERVAL = 1000 / 30
-        self.node = node
         self.port = port
         self.baudrate = baudrate
         self.timeout = timeout

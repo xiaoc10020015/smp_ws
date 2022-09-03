@@ -34,6 +34,7 @@ class ArduinoNode(Node):
         
         self.declare_parameter('rate', 50)
         self.rate = self.get_parameter('rate').get_parameter_value().integer_value
+        r = self.create_rate(self.rate)
 
         self.declare_parameter('sensorstate_rate', 50)
         self.sensorstate_rate = self.get_parameter('sensorstate_rate').get_parameter_value().integer_value
@@ -72,8 +73,6 @@ class ArduinoNode(Node):
         # A service to read the value of an analog sensor
         self.create_service(AnalogRead, 'analog_read', self.AnalogReadHandler)
 
-        
-        self.timer = self.create_timer(0.5, self.timer_callback)  # 创建一个定时器（单位为秒的周期，定时执行的回调函数）
         # Initialize the controlller
         self.controller = Arduino(self.port, self.baud, self.timeout, self.motors_reversed)
         self.controller.connect()
@@ -112,6 +111,37 @@ class ArduinoNode(Node):
         # Initialize the base controller if used
         if self.use_base_controller:
             self.myBaseController = BaseController(self, self.controller, self.base_frame, self.name + "_base_controller")
+
+        while not rclpy.ok():
+            for sensor in self.mySensors:
+                mutex.acquire()
+                sensor.poll()
+                mutex.release()
+
+            if self.use_base_controller:
+                mutex.acquire()
+                self.myBaseController.poll()
+                mutex.release()
+
+            # Publish all sensor values on a single topic for convenience
+            now = self.get_clock().now()
+
+            if now > self.t_next_sensors:
+                msg = SensorState()
+                msg.header.frame_id = self.base_frame
+                msg.header.stamp = now
+                for i in range(len(self.mySensors)):
+                    msg.name.append(self.mySensors[i].name)
+                    msg.value.append(self.mySensors[i].value)
+                try:
+                    self.sensorStatePub.publish(msg)
+                except:
+                    pass
+
+                self.t_next_sensors = now + self.t_delta_sensors
+
+            r.sleep()
+    
     def sensor_by_dict(self, data):
         result = dict()
         for _str in str(data).split('|'):
@@ -150,12 +180,6 @@ class ArduinoNode(Node):
     def AnalogReadHandler(self, req):
         value = self.controller.analog_read(req.pin)
         return AnalogReadResponse(value)
-
-
-    def timer_callback(self):                                     # 创建定时器周期执行的回调函数
-        self.get_logger().info("-----------------")                                  # 填充消息对象中的消息数据
-
-
 
 
 def main(args=None):

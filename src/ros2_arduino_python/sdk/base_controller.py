@@ -40,24 +40,24 @@ class BaseController:
         self.base_frame = base_frame
 
         self.node.declare_parameter('base_controller_rate', 10)
-        self.rate = self.node.get_parameter('base_controller_rate').get_parameter_value().double_value
+        self.rate = self.node.get_parameter('base_controller_rate').get_parameter_value().integer_value
         
         self.node.declare_parameter('base_controller_timeout', 1.0)
         self.timeout = self.node.get_parameter('base_controller_timeout').get_parameter_value().double_value
 
         self.stopped = False
-        self.node.declare_parameter('wheel_diameter', '')
-        self.node.declare_parameter('wheel_track', '')
-        self.node.declare_parameter('encoder_resolution', '')
+        self.node.declare_parameter('wheel_diameter', 0.1)
+        self.node.declare_parameter('wheel_track', 0.2)
+        self.node.declare_parameter('encoder_resolution', 8384)
         self.node.declare_parameter('gear_reduction', 1.0)
         self.node.declare_parameter('Kp', 20)
         self.node.declare_parameter('Kd', 12)
         self.node.declare_parameter('Ki', 0)
         self.node.declare_parameter('Ko', 50)
         pid_params = dict()
-        pid_params['wheel_diameter'] = self.node.get_parameter('wheel_diameter').get_parameter_value().string_value
-        pid_params['wheel_track'] = self.node.get_parameter('wheel_track').get_parameter_value().string_value
-        pid_params['encoder_resolution'] = self.node.get_parameter('encoder_resolution').get_parameter_value().string_value 
+        pid_params['wheel_diameter'] = self.node.get_parameter('wheel_diameter').get_parameter_value().double_value
+        pid_params['wheel_track'] = self.node.get_parameter('wheel_track').get_parameter_value().double_value
+        pid_params['encoder_resolution'] = self.node.get_parameter('encoder_resolution').get_parameter_value().integer_value 
         pid_params['gear_reduction'] = self.node.get_parameter('gear_reduction').get_parameter_value().double_value
         pid_params['Kp'] = self.node.get_parameter('Kp').get_parameter_value().integer_value
         pid_params['Kd'] = self.node.get_parameter('Kd').get_parameter_value().integer_value
@@ -66,14 +66,13 @@ class BaseController:
         
         self.node.declare_parameter('accel_limit', 0.1)
         self.accel_limit = self.node.get_parameter('accel_limit').get_parameter_value().double_value
-        
         #-----fix-----rclpy.exceptions.ParameterAlreadyDeclaredException
         #self.node.declare_parameter('motors_reversed', False)
         self.motors_reversed = self.node.get_parameter('motors_reversed').get_parameter_value().bool_value
         
         # Set up PID parameters and check for missing values
         self.setup_pid(pid_params)
-            
+        self.node.get_logger().error("--------------- ")    
         # How many encoder ticks are there per meter?
         self.ticks_per_meter = self.encoder_resolution * self.gear_reduction  / (self.wheel_diameter * pi)
         
@@ -101,13 +100,13 @@ class BaseController:
         self.last_cmd_vel = now
 
         # Subscriptions
-        self.node.create_subscription(Twist, "/cmd_vel", self.cmdVelCallback)
+        self.node.create_subscription(Twist, "/cmd_vel", self.cmdVelCallback,10)
         # Clear any old odometry info
         self.arduino.reset_encoders()
         
         # Set up the odometry broadcaster
         self.odomPub = self.node.create_publisher(Odometry, "odom", 5)
-        self.odomBroadcaster = TransformBroadcaster()
+        self.odomBroadcaster = TransformBroadcaster(self.node)
         
         self.node.get_logger().info("Started base controller for a base of " + str(self.wheel_track) + "m wide with " + str(self.encoder_resolution) + " ticks per rev")
         self.node.get_logger().info("Publishing odometry data at: " + str(self.rate) + " Hz using " + str(self.base_frame) + " as base frame")
@@ -117,7 +116,7 @@ class BaseController:
         missing_params = False
         for param in pid_params:
             if pid_params[param] == "":
-                print("*** PID Parameter " + param + " is missing. ***")
+                self.node.get_logger().error("*** PID Parameter " + param + " is missing. ***")
                 missing_params = True
         
         if missing_params:
