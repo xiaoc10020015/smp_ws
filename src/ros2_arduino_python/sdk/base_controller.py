@@ -71,8 +71,7 @@ class BaseController:
         self.motors_reversed = self.node.get_parameter('motors_reversed').get_parameter_value().bool_value
         
         # Set up PID parameters and check for missing values
-        self.setup_pid(pid_params)
-        self.node.get_logger().error("--------------- ")    
+        self.setup_pid(pid_params)  
         # How many encoder ticks are there per meter?
         self.ticks_per_meter = self.encoder_resolution * self.gear_reduction  / (self.wheel_diameter * pi)
         

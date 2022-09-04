@@ -2,6 +2,7 @@
 * 语音合成（Text To Speech，TTS）技术能够自动将任意文字实时转换为连续的
 * 自然语音，是一种能够在任何时间、任何地点，向任何人提供语音信息服务的
 * 高效便捷手段，非常符合信息时代海量数据、动态更新和个性化查询的需求。
+* ros2 topic pub --once /qianxun/voiceWakeup std_msgs/String "data: 'any words'"
 */
 
 #include <stdio.h>

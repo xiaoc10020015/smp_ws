@@ -1,5 +1,6 @@
 /*
 * 语音听写(iFly Auto Transform)技术能够实时地将语音转换成对应的文字。
+* ros2 topic pub --once /voiceWakeup std_msgs/String "data: 'any words'" 
 */
 
 #include <stdlib.h>
