@@ -1,6 +1,7 @@
 install/
 log/
 build/
+msc/
 .vscode
 CMakeLists.txt.user
 CMakeCache.txt
