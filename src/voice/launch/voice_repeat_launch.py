@@ -9,12 +9,14 @@ def generate_launch_description():
             package=voice_pkg_name,          
             executable='iat_publish',
             namespace='qianxun',       
-            name='iat_publish',                 
+            name='iat_publish',
+            output='screen'                 
         ),
         Node(                                  
             package=voice_pkg_name,          
             executable='tts_subscribe',
             namespace='qianxun',       
-            name='tts_subscribe',       
+            name='tts_subscribe',
+            output='screen'       
         )
     ])
