@@ -58,4 +58,7 @@ install(TARGETS
 install(TARGETS
   tts_subscribe
   DESTINATION lib/${PROJECT_NAME}
+) 
+install(DIRECTORY launch
+DESTINATION share/${PROJECT_NAME}
 )
