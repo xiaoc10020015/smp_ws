@@ -42,6 +42,9 @@ ament_target_dependencies(iat_publish ${dependencies})
 add_executable(tts_subscribe src/tts_subscribe.cpp)
 ament_target_dependencies(tts_subscribe ${dependencies})
 
+add_executable(voice_assistant src/voice_assistant.cpp)
+ament_target_dependencies(voice_assistant ${dependencies})
+
 target_link_libraries(iat_publish
   ${PROJECT_SOURCE_DIR}
   libmsc.so -ldl -lpthread -lm -lrt -lasound
@@ -51,14 +54,20 @@ target_link_libraries(tts_subscribe
   ${PROJECT_SOURCE_DIR}
   libmsc.so -ldl -pthread 
 )
+
+target_link_libraries(
+   voice_assistant
+   ${PROJECT_SOURCE_DIR}
+   libmsc.so -ldl -pthread
+)
+
 install(TARGETS
   iat_publish
+  tts_subscribe
+  voice_assistant
   DESTINATION lib/${PROJECT_NAME}
 )
-install(TARGETS
-  tts_subscribe
-  DESTINATION lib/${PROJECT_NAME}
-) 
+
 install(DIRECTORY launch
 DESTINATION share/${PROJECT_NAME}
 )

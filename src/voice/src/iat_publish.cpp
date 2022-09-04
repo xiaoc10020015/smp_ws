@@ -283,9 +283,7 @@ int main(int argc, char* argv[])
 
     // 声明Publisher和Subscriber
     // 订阅唤醒语音识别的信号
-    rclcpp::Subscription<std_msgs::msg::String>::SharedPtr wakeUpSub = node->create_subscription<std_msgs::msg::String>("voiceWakeup", 1000, WakeUp);   
-    // 订阅唤醒语音识别的信号    
-
+    rclcpp::Subscription<std_msgs::msg::String>::SharedPtr wakeUpSub = node->create_subscription<std_msgs::msg::String>("voiceWakeup", 1000, WakeUp);
     rclcpp::Publisher<std_msgs::msg::String>::SharedPtr voiceWordsPub = node->create_publisher<std_msgs::msg::String>("voiceWords", 1000);  
 
 	RCLCPP_INFO(node->get_logger(), "Sleeping...");
