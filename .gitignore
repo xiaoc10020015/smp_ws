@@ -3,6 +3,7 @@ log/
 build/
 msc/
 .vscode
+tts_sample.wav
 CMakeLists.txt.user
 CMakeCache.txt
 CMakeFiles

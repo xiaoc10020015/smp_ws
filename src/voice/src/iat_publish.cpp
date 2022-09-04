@@ -277,7 +277,7 @@ int main(int argc, char* argv[])
 {
 	// 初始化ROS
 	rclcpp::init(argc, argv);
-    auto node = std::make_shared<rclcpp::Node>("iat_publish");
+    auto node = std::make_shared<rclcpp::Node>("voiceRecognition");
     rclcpp::WallRate loop_rate(10.0);
     
 
