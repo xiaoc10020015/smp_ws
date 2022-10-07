@@ -1,0 +1,7 @@
+<robot name="qianxun" xmlns:xacro="http://wiki.ros.org/xacro">
+    <xacro:include filename="base.xacro" />
+    <xacro:include filename="qx_base.xacro" />
+    <xacro:include filename="qx_camera.xacro" />
+    <xacro:include filename="qx_laser.xacro" />
+
+</robot>

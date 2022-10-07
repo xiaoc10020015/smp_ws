@@ -10,9 +10,9 @@ from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
 
 def generate_launch_description():
-    default_pkg_path = get_package_share_path('qx_urdf')
-    default_model_path = os.path.join(default_pkg_path, f'urdf/xacro/car.xacro')
-    default_rviz_config_path = default_pkg_path / 'rviz/car.rviz'
+    default_pkg_path = get_package_share_path('robot_description')
+    default_model_path = os.path.join(default_pkg_path, f'xacro/qianxun.xacro')
+    default_rviz_config_path = default_pkg_path / 'rviz/qx.rviz'
 
     gui_arg = DeclareLaunchArgument(name='gui', default_value='false', choices=['true', 'false'],
                                     description='Flag to enable joint_state_publisher_gui')
