@@ -4,4 +4,6 @@
     <xacro:include filename="qx_camera.xacro" />
     <xacro:include filename="qx_laser.xacro" />
 
+    <xacro:include filename="qx_move.xacro" />
+
 </robot>
