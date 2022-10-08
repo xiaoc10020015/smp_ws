@@ -4,6 +4,9 @@
     <xacro:include filename="qx_camera.xacro" />
     <xacro:include filename="qx_laser.xacro" />
 
-    <xacro:include filename="qx_move.xacro" />
+    <!-- gazebo xacro 文件 -->
+    <xacro:include filename="qx_move_gazebo.xacro" />
+    <xacro:include filename="qx_laser_gazebo.xacro" />
+    <xacro:include filename="qx_camera_gazebo.xacro" />
 
 </robot>
