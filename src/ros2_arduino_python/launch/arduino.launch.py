@@ -14,8 +14,7 @@ def generate_launch_description():
     return LaunchDescription([                 
         Node(                                  
             package=arduino_pkg_name,          
-            executable='arduino_node',
-            namespace='qianxun',       
+            executable='arduino_node',     
             name='arduino',                 
             parameters=[config]
         )
