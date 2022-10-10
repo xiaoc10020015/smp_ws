@@ -72,7 +72,7 @@ class ArduinoNode(Node):
 
         # A service to read the value of an analog sensor
         self.create_service(AnalogRead, 'analog_read', self.AnalogReadHandler)
-
+        self.get_logger().info("------------Arduino init-------------")
         # Initialize the controlller
         self.controller = Arduino(self.port, self.baud, self.timeout, self.motors_reversed)
         self.controller.connect()
