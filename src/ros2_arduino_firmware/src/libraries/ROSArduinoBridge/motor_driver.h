@@ -9,6 +9,11 @@
   #define LEFT_MOTOR_FORWARD   10
   #define RIGHT_MOTOR_ENABLE 12
   #define LEFT_MOTOR_ENABLE 13
+#elif defined L298P_MOTOR_DRIVER
+  #define DIRA 13
+  #define PWMA 11
+  #define DIRB 12
+  #define PWMB 10
 #endif
 
 void initMotorController();

@@ -12,9 +12,18 @@
   //below can be changed, but should be PORTC pins
   #define RIGHT_ENC_PIN_A PC4  //pin A4
   #define RIGHT_ENC_PIN_B PC5   //pin A5
+#elif defined ARDUINO_MY_COUNTER
+  #define LEFT_A 21
+  #define LEFT_B 20
+  #define RIGHT_A 18
+  #define RIGHT_B 19
+  void initEncoders();
+  void leftEncoderEventA();
+  void leftEncoderEventB();
+  void rightEncoderEventA();
+  void rightEncoderEventB();
 #endif
    
 long readEncoder(int i);
 void resetEncoder(int i);
 void resetEncoders();
-
